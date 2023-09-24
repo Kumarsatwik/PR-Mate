@@ -2,6 +2,8 @@
 
 > A GitHub App built with [Probot](https://github.com/probot/probot) that A Probot app
 
+> Only Python Code Can Execute ( Improtant!!!)
+
 ## Setup
 
 ```sh
@@ -11,22 +13,18 @@ npm install
 # Run the bot
 npm start
 ```
+Run
+----
+http://localhost:3000
 
-## Docker
+- give access to your github repository
 
-```sh
-# 1. Build container
-docker build -t probot-app .
 
-# 2. Start container
-docker run -e APP_ID=<app-id> -e PRIVATE_KEY=<pem-value> probot-app
-```
+demonstration video
+---------------
 
-## Contributing
+https://youtu.be/vl0pwGDMEq0
 
-If you have suggestions for how probot-app could be improved, or want to report a bug, open an issue! We'd love all and any contributions.
-
-For more, check out the [Contributing Guide](CONTRIBUTING.md).
 
 ## License
 
