@@ -4,6 +4,13 @@
  */
 // const { Bard } = require("googlebard");
 
+/**
+ * Registers event listeners for "issues.opened" and ["pull_request.opened", "issue_comment.created"] events.
+ * If a specific command is found in the event payload, it executes the code using the Piston API and creates a comment with the executed output.
+ *
+ * @param {Object} app - The app instance that will handle the events
+ * @return {Promise} A promise that resolves when the event handling is complete
+ */
 module.exports = (app) => {
   app.on("issues.opened", async (context) => {
     const issueComment = context.issue({
@@ -26,7 +33,7 @@ module.exports = (app) => {
       ) {
         commandExists = true;
         codeToExecute = payload.pull_request.body; // Extract code from PR body
-      } 
+      }
     } else if (payload.action === "created") {
       // Check the comment for the /execute command
       if (payload.comment.body.includes("/execute")) {
@@ -57,6 +64,7 @@ module.exports = (app) => {
       return context.octokit.issues.createComment(issueComment);
     } catch (error) {
       console.error("An error occurred:", error);
+      throw error;
     }
   });
 };
