@@ -2,42 +2,61 @@
  * This is the main entrypoint to your Probot app
  * @param {import('probot').Probot} app
  */
+// const { Bard } = require("googlebard");
+
 module.exports = (app) => {
-  // Your code here
-  module.exports = (app) => {
-    app.on("pull_request", async (context) => {
-      const pr = context.payload.pull_request;
-      console.log("Pull request");
-      console.log(pr);
-
-      // Check commits for "/execute" command
-      const commitMessages = await context.github.pulls.listCommits(
-        context.repo({ pull_number: pr.number })
-      );
-      const hasExecuteCommandInCommits = commitMessages.data.some((commit) =>
-        commit.commit.message.includes("/execute")
-      );
-
-      // Check comments for "/execute" command
-      const comments = await context.github.issues.listComments(
-        context.repo({ issue_number: pr.number })
-      );
-      const hasExecuteCommandInComments = comments.data.some((comment) =>
-        comment.body.includes("/execute")
-      );
-
-      if (hasExecuteCommandInCommits || hasExecuteCommandInComments) {
-        // Execute your code here
-        console.log("Executing code for /execute command in pull request.");
-
-        // You can add your logic to trigger code execution here.
-      }
+  app.on("issues.opened", async (context) => {
+    const issueComment = context.issue({
+      body: "Thanks for opening this issue!",
     });
-  };
+    return context.octokit.issues.createComment(issueComment);
+  });
 
-  // For more information on building apps:
-  // https://probot.github.io/docs/
+  app.on(["pull_request.opened", "issue_comment.created"], async (context) => {
+    const axios = require("axios");
+    const payload = context.payload;
+    let commandExists = false;
+    let codeToExecute = "";
 
-  // To get your app running against GitHub, see:
-  // https://probot.github.io/docs/development/
+    if (payload.action === "opened") {
+      // Check the PR title and body for the /execute command
+      if (
+        payload.pull_request.title.includes("/execute") ||
+        payload.pull_request.body.includes("/execute")
+      ) {
+        commandExists = true;
+        codeToExecute = payload.pull_request.body; // Extract code from PR body
+      } 
+    } else if (payload.action === "created") {
+      // Check the comment for the /execute command
+      if (payload.comment.body.includes("/execute")) {
+        commandExists = true;
+        codeToExecute = payload.comment.body; // Extract code from comment
+      }
+    }
+
+    if (!commandExists) return;
+
+    try {
+      // Execute the code using the Piston API
+      const pistonResult = await axios.post(
+        "https://emkc.org/api/v1/piston/execute",
+        {
+          language: "python", // Replace this with the detected language
+          source: codeToExecute.replace("/execute", "").trim(),
+        }
+      );
+
+      const pistonOutput = pistonResult.data.output;
+
+      // Create a comment on the pull request with the executed output
+      const issueComment = context.issue({
+        body: `Hey 🖐️, Output of executed code: \n\`\`\`\n${pistonOutput}\n\`\`\``,
+      });
+
+      return context.octokit.issues.createComment(issueComment);
+    } catch (error) {
+      console.error("An error occurred:", error);
+    }
+  });
 };
