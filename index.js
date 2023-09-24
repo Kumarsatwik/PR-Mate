@@ -64,7 +64,6 @@ module.exports = (app) => {
       return context.octokit.issues.createComment(issueComment);
     } catch (error) {
       console.error("An error occurred:", error);
-      throw error;
     }
   });
 };
