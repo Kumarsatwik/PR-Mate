@@ -18,6 +18,7 @@ Run
 http://localhost:3000
 
 - give access to your github repository
+- after install the app , restart the server
 
 
 demonstration video
